@@ -14,6 +14,7 @@
 	"lastUpdated": "2016-10-16 11:46:00"
 }
 
+/* Set up XML */
 var parser = new DOMParser();
 var doc = parser.parseFromString('<map/>', 'application/xml');
 //doc.removeChild(document.Element);
@@ -21,49 +22,49 @@ var doc = parser.parseFromString('<map/>', 'application/xml');
 var mapVersion = doc.createAttribute("version");
 mapVersion.value = "1.0.1";
 doc.documentElement.setAttributeNode(mapVersion);
-
 var rootNode = doc.createElement("node");
 
+/* Colours */
 var green = "#007439";
 var red = "#990066";
 
-function doExport() {
-    var tmpArticles = new Array();
-	var articles = {};
-    var collections = new Array();
-
+/* Get articles */
+function getItems() {
+    var articles = {};
+    
     while (item = Zotero.nextItem()) {  // Articles for direct reference later
         articles[item.itemID] = {};
         articles[item.itemID].title = item.title;
-		articles[item.itemID].date = (typeof item.date != 'undefined') ? new Date(item.date).getFullYear() : 'N/A';
-		articles[item.itemID].contributors = new Array();
-		articles[item.itemID].tags = new Array();
-		if (typeof item.creators != 'undefined' && item.creators instanceof Array) {
-			var contributorsArray = new Array();
-			for (var j = 0; j < item.creators.length; j++) {
-				var name = item.creators[j].lastName;
-				contributorsArray.push(name);
-			}
-			articles[item.itemID].contributors = contributorsArray;
+        articles[item.itemID].date = (typeof item.date != 'undefined') ? new Date(item.date).getFullYear() : 'N/A';
+        articles[item.itemID].contributors = new Array();
+        articles[item.itemID].tags = new Array();
+        if (typeof item.creators != 'undefined' && item.creators instanceof Array) {
+            var contributorsArray = new Array();
+            for (var j = 0; j < item.creators.length; j++) {
+                var name = item.creators[j].lastName;
+                contributorsArray.push(name);
+            }
+            articles[item.itemID].contributors = contributorsArray;
         }
-		if (typeof item.tags != 'undefined' && item.tags instanceof Array) {
-			var tagsArray = new Array();
-			for (var k = 0; k < item.tags.length; k++) {
-				tagsArray.push(item.tags[k].tag);
-			}
-			articles[item.itemID].tags = tagsArray;
-		}
-
-        //tmpArticles.push(item);
+        if (typeof item.tags != 'undefined' && item.tags instanceof Array) {
+            var tagsArray = new Array();
+            for (var k = 0; k < item.tags.length; k++) {
+                tagsArray.push(item.tags[k].tag);
+            }
+            articles[item.itemID].tags = tagsArray;
+        }
     }
+    
+    return articles;
+}
 
-
-    var childCollectionIDs = new Array();
+/* Get collections*/
+function getCollections() {
+    var collections = new Array(), childCollectionIDs = new Array();
     while(collection = Zotero.nextCollection()) {	// First grab all the collections	
 
 		// Check if current collection has children
 		// If it does, add them but then ignore them subsequently (so they aren't repeated)
-
 		childIDs = collection.childCollections;
 		for(var i=0;i<childIDs.length;i++){
 			childCollectionIDs.push(childIDs[i]);
@@ -73,9 +74,45 @@ function doExport() {
 			collections.push(collection);
 		}
 	}
+    
+    return collections;
+}
+
+/* Generic XML node creator */
+function createNode(name, attributes) {
+    var node = doc.createElement(name);    
+    for(var attr in attributes) {
+        var attribute = doc.createAttribute(attr);
+        attribute.value = attributes[attr];
+        node.setAttributeNode(attribute);
+    }
+    return node;
+}
+
+
+function doExport() {
+    var tmpArticles = new Array();
+	var articles = getItems();
+    var collections = getCollections();
+
+
+
+
+    
 
 	for(var i=0; i < collections.length; i++) {	// Loop through parent collections
 
+        thisCollection = collections[i];
+        var collectionObjAttrs = {
+            "text"      :   thisCollection.name,
+            "id"        :   thisCollection.id,
+            "position"  :   (i % 2 == 0) ? "left" : "right"
+        };
+        var collectionObj = createNode("node", collectionObjAttrs);
+    
+    
+    /*
+    
 		// Set up parent collection node
 		thisCollection = collections[i];
 		var collectionObj = doc.createElement("node"); // Collection
@@ -166,7 +203,7 @@ function doExport() {
 							var contributorName = doc.createTextNode( itemContributors[l] );
 							contributorObj.appendChild(contributorName);
 							itemObj.appendChild(contributorObj);
-						}*/
+						}*!/
 
 						childCollectionObj.appendChild(itemObj);	// Add item to child collection
 					}
@@ -221,11 +258,11 @@ function doExport() {
 					var contributorName = doc.createTextNode( itemContributors[l] );
 					contributorObj.appendChild(contributorName);
 					itemObj.appendChild(contributorObj);
-				}*/
+				}*!/
 				
 				collectionObj.appendChild(itemObj);	// Add item to child collection
-			}
-		}
+			} 
+		}*/
 
 		// TODO add items for this (parent) collection
 
