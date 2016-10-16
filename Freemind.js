@@ -78,16 +78,27 @@ function getCollections() {
     return collections;
 }
 
-/* Generic XML node creator */
-function createNode(name, attributes) {
-    var node = doc.createElement(name);    
-    for(var attr in attributes) {
-        var attribute = doc.createAttribute(attr);
-        attribute.value = attributes[attr];
-        node.setAttributeNode(attribute);
+/* Generic XML node attribute creator */
+Element.prototype.setAttributes = function (attrs) {
+    for (var idx in attrs) {
+        this.setAttribute(idx, attrs[idx]);
     }
-    return node;
 }
+
+Element.prototype.addChild = function (name, attributes, children) {
+    var c = doc.createElement(name);
+    c.setAttributes(attributes);
+    if (typeof children != 'undefined' && children instanceof Array) {  // Add any specified children
+        for (var i=0; i< children.length; i++) {
+            c.addChild(children[i].name, children[i].attrs);
+        }
+    }
+    this.appendChild(c);
+}
+
+
+// foreach($array as $idx=>$child) {
+//}
 
 
 function doExport() {
@@ -95,80 +106,71 @@ function doExport() {
 	var articles = getItems();
     var collections = getCollections();
 
-
-
-
-    
-
 	for(var i=0; i < collections.length; i++) {	// Loop through parent collections
 
         thisCollection = collections[i];
-        var collectionObjAttrs = {
+        var collectionObj = doc.createElement("node");
+        collectionObj.setAttributes({
             "text"      :   thisCollection.name,
             "id"        :   thisCollection.id,
             "position"  :   (i % 2 == 0) ? "left" : "right"
-        };
-        var collectionObj = createNode("node", collectionObjAttrs);
+        });
+        
     
-    
-    /*
-    
-		// Set up parent collection node
-		thisCollection = collections[i];
-		var collectionObj = doc.createElement("node"); // Collection
-		var collectionTitle = doc.createAttribute("text");
-		var collectionID = doc.createAttribute("id");
-		var collectionPos = doc.createAttribute("position");
-		//var cloud = doc.createElement("cloud");
-		//collectionObj.appendChild(cloud);
-		collectionTitle.value = thisCollection.name;
-		collectionObj.setAttributeNode(collectionTitle);
-		collectionID.value = thisCollection.id;
-		collectionObj.setAttributeNode(collectionID);
-		collectionPos.value = (i % 2 == 0) ? "left" : "right";
-		collectionObj.setAttributeNode(collectionPos);
-
 		// Set up any child collection nodes
 		var descendents = thisCollection.descendents;
 		for (var j=0; j < descendents.length; j++) {	// Loop descendents
 			var thisDescendent = descendents[j];
 			if (thisDescendent.type === "collection") {	// Descendent is a collection, set up node
-				var childCollectionObj = doc.createElement("node"); // Collection
-				var childCollectionTitle = doc.createAttribute("text");
-				var childCollectionID = doc.createAttribute("id");
-				//var childCollectionPos = doc.createAttribute("position");
-				var cloud = doc.createElement("cloud");
-				var cloudColour = doc.createAttribute("color");
-				cloudColour.value = "#ffffff";
-				cloud.setAttributeNode(cloudColour);
-				childCollectionObj.appendChild(cloud);
-				childCollectionTitle.value = thisDescendent.name;
-				childCollectionObj.setAttributeNode(childCollectionTitle);
-				childCollectionID.value = thisDescendent.id;
-				childCollectionObj.setAttributeNode(childCollectionID);
-				//childCollectionPos.value = (j % 2 == 0) ? "left" : "right";
-				//childCollectionObj.setAttributeNode(childCollectionPos);
+				
+                var childCollectionObj = doc.createElement("node");
+                childCollectionObj.setAttributes({
+                    "text"      :   thisDescendent.name,
+                    "id"        :   thisDescendent.id
+                });
+                childCollectionObj.addChild("cloud", {
+                    "color"     :   "#ffffff"
+                });
+                
+                
+                
+                
+                
 
 
 				var childItems = thisDescendent.children;
 				for (var k = 0; k < childItems.length; k++){ // Loop items
 					var thisItem = childItems[k];
 					if (thisItem.type === "item") {	// Set up item node
-						var itemObj = doc.createElement("node"); // item
-						var itemTitle = doc.createAttribute("text");
-						//var itemDate = doc.createAttribute("date");
-						var itemID = doc.createAttribute("id");
-						var itemColour = doc.createAttribute("color");
-						var itemContributors = articles[thisItem.id].contributors, contributorsString = '';
-						var itemRead = doc.createElement("icon");
-						var itemReadIcon = doc.createAttribute("builtin");
-						for(var l = 0; l < itemContributors.length; l++) {
+                    
+                        var itemContributors = articles[thisItem.id].contributors, contributorsString = '';
+                        for(var l = 0; l < itemContributors.length; l++) {
 							if (l == 2) {	// Max 2 authors displayed
 								contributorsString += "...  ";
 								break; 
 							}
 							contributorsString += itemContributors[l] + ", ";
 						}
+                        childCollectionObj.addChild("node", {
+                           "text"   :   "[" + articles[thisItem.id].date + " " + contributorsString.substring(0, (contributorsString.length-2)) + "] " + articles[thisItem.id].title,
+                           "id"     :   thisItem.id,
+                           "color"  :   ""
+                        }, [{
+                            name    :   "icon",
+                            attrs   :   {
+                            }
+                        }]);
+                    
+                    /*
+						var itemObj = doc.createElement("node"); // item
+						var itemTitle = doc.createAttribute("text");
+						//var itemDate = doc.createAttribute("date");
+						var itemID = doc.createAttribute("id");
+						var itemColour = doc.createAttribute("color");
+						//var itemContributors = articles[thisItem.id].contributors, contributorsString = '';
+						var itemRead = doc.createElement("icon");
+						var itemReadIcon = doc.createAttribute("builtin");
+						
 						itemTitle.value = "[" + articles[thisItem.id].date + " " + contributorsString.substring(0, (contributorsString.length-2)) + "] " + articles[thisItem.id].title;
 						itemObj.setAttributeNode(itemTitle);
 						//itemDate.value = articles[thisItem.id].date
@@ -194,7 +196,7 @@ function doExport() {
 						itemObj.appendChild(itemRead);
 		
 	
-						
+						*/
 
 						/* Subnodes for individual contributors -- commented out because Freemind ignores it
 						var itemContributors = articles[thisItem.id].contributors;
@@ -203,15 +205,15 @@ function doExport() {
 							var contributorName = doc.createTextNode( itemContributors[l] );
 							contributorObj.appendChild(contributorName);
 							itemObj.appendChild(contributorObj);
-						}*!/
+						}*/
 
-						childCollectionObj.appendChild(itemObj);	// Add item to child collection
+						//childCollectionObj.appendChild(itemObj);	// Add item to child collection
 					}
 				}
 
 				collectionObj.appendChild(childCollectionObj);	// Add child collection to parent
 
-			} else if (thisDescendent.type === "item") {
+			} /*else if (thisDescendent.type === "item") {
 				var itemObj = doc.createElement("node"); // item
 				var itemTitle = doc.createAttribute("text");
 				//var itemDate = doc.createAttribute("date");
@@ -261,8 +263,8 @@ function doExport() {
 				}*!/
 				
 				collectionObj.appendChild(itemObj);	// Add item to child collection
-			} 
-		}*/
+			} */
+		}
 
 		// TODO add items for this (parent) collection
 
@@ -271,7 +273,7 @@ function doExport() {
 		//doc.documentElement.appendChild(collectionObj);
 	}
 
-	//Zotero.write(JSON.stringify(articles));
+	Zotero.write(JSON.stringify(collections));
 	Zotero.write('<?xml version="1.0" encoding="UTF-8"?>\n');
 	var serializer = new XMLSerializer();
 	Zotero.write(serializer.serializeToString(doc));
