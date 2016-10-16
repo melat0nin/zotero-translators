@@ -1,6 +1,6 @@
 {
-	"translatorID": "laurence123",
-	"label": "Mind Map",
+	"translatorID": "43b6b1f5-d27a-4b79-a19f-4f0feb5275d6",
+	"label": "Freemind",
 	"creator": "Laurence Diver",
 	"target": "mm",
 	"minVersion": "4.0",
@@ -11,7 +11,7 @@
 	},
 	"inRepository": false,
 	"translatorType": 2,
-	"lastUpdated": "2016-10-13 08:45:20"
+	"lastUpdated": "2016-10-16 11:46:00"
 }
 
 var parser = new DOMParser();
@@ -88,7 +88,7 @@ function doExport() {
 		collectionObj.setAttributeNode(collectionTitle);
 		collectionID.value = thisCollection.id;
 		collectionObj.setAttributeNode(collectionID);
-		collectionPos.value = (l % 2 == 0) ? "left" : "right";
+		collectionPos.value = (i % 2 == 0) ? "left" : "right";
 		collectionObj.setAttributeNode(collectionPos);
 
 		// Set up any child collection nodes
@@ -99,7 +99,7 @@ function doExport() {
 				var childCollectionObj = doc.createElement("node"); // Collection
 				var childCollectionTitle = doc.createAttribute("text");
 				var childCollectionID = doc.createAttribute("id");
-				var childCollectionPos = doc.createAttribute("position");
+				//var childCollectionPos = doc.createAttribute("position");
 				var cloud = doc.createElement("cloud");
 				var cloudColour = doc.createAttribute("color");
 				cloudColour.value = "#ffffff";
@@ -109,8 +109,8 @@ function doExport() {
 				childCollectionObj.setAttributeNode(childCollectionTitle);
 				childCollectionID.value = thisDescendent.id;
 				childCollectionObj.setAttributeNode(childCollectionID);
-				childCollectionPos.value = (l % 2 == 0) ? "left" : "right";
-				childCollectionObj.setAttributeNode(childCollectionPos);
+				//childCollectionPos.value = (j % 2 == 0) ? "left" : "right";
+				//childCollectionObj.setAttributeNode(childCollectionPos);
 
 
 				var childItems = thisDescendent.children;
