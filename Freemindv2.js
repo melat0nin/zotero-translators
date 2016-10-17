@@ -28,53 +28,43 @@ var rootNode = doc.createElement("node");
 var green = "#007439";
 var red = "#990066";
 
-/* Get articles */
+/* Get articles object */
 function getArticles() {
-    var articles = new Array();
-    var tmpArticles = {};
-    while (item = Zotero.nextItem()) {  // Articles for direct reference later
-        var article = {};
-        article.id = item.itemID;
-        article.collections = item.collections;
-        article.title = item.title;
-        article.date = (typeof item.date != 'undefined') ? new Date(item.date).getFullYear() : 'N/A';
-        article.contributors = new Array();
-        article.tags = new Array();
+    var articles = {};
+    while (item = Zotero.nextItem()) {
+        articles[item.itemID] = {};
+        articles[item.itemID].collections = item.collections;
+        articles[item.itemID].title = item.title;
+        articles[item.itemID].date = (typeof item.date != 'undefined') ? new Date(item.date).getFullYear() : 'N/A';
+        articles[item.itemID].contributors = new Array();
+        articles[item.itemID].tags = new Array();
         if (typeof item.creators != 'undefined' && item.creators instanceof Array) {
             var contributorsArray = new Array();
             for (var j = 0; j < item.creators.length; j++) {
                 var name = item.creators[j].lastName;
                 contributorsArray.push(name);
             }
-            article.contributors = contributorsArray;
+            articles[item.itemID].contributors = contributorsArray;
         }
         if (typeof item.tags != 'undefined' && item.tags instanceof Array) {
             var tagsArray = new Array();
             for (var k = 0; k < item.tags.length; k++) {
                 tagsArray.push(item.tags[k].tag);
             }
-            article.tags = tagsArray;
+            articles[item.itemID].tags = tagsArray;
         }
-        articles.push(article);
-        //tmpArticles[item.itemID] = item;
     }
-    
     return articles;
 }
 
-/* Get collections*/
+/* Get collections object */
 function getCollections() {
-    var collections = new Array();
-    
-    
+    var collections = {};
     while(collection = Zotero.nextCollection()) {	// First grab all the collections	
-        collections.push({
-            id : collection.primary.key,
-            title       :   collection.fields.name,
-            articles    :   []
-        });
+		collections[collection.primary.key] = {};
+		collections[collection.primary.key].title = collection.fields.name;
+		collections[collection.primary.key].articles = {};
 	}
-    
     return collections;
 }
 
@@ -108,26 +98,17 @@ function doExport() {
     articles = getArticles();    
     collections = getCollections();
     
-    
+	// Sort articles into their respective collection(s)
     for (var key in articles) {
         if (!articles.hasOwnProperty(key)) continue; // skip loop if the property is from prototype
-
         var article = articles[key];
-        
         var artCollections = article.collections;
-        for(var i=0; i<artCollections.length; i++) {            
-            var collection = collections.filter(function( obj ) {
-                return obj.id == artCollections[i];
-            });
-            Zotero.write(JSON.stringify(collection));
-            //collection[0].articles.push(article);
-            
-            
-            
-            //collections.colKey].articles = article;
+        for(var i=0; i<artCollections.length; i++) {	// Loop collection keys this article is in
+            var collectionKey = artCollections[i];	// Current collection key
+			if (typeof collections[collectionKey] != 'undefined' && collections[collectionKey] instanceof Object) {
+				collections[collectionKey].articles[key] = article;	
+			}
         }
-        
-       
     }
     
     /*for (var idx in articles) {
