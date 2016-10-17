@@ -24,9 +24,12 @@ mapVersion.value = "1.0.1";
 doc.documentElement.setAttributeNode(mapVersion);
 var rootNode = doc.createElement("node");
 
+var collectionKeys = new Array();
+
 /* Colours */
 var green = "#007439";
 var red = "#990066";
+
 
 /* Get articles object */
 function getArticles() {
@@ -59,11 +62,15 @@ function getArticles() {
 
 /* Get collections object */
 function getCollections() {
-    var collections = {};
+    var collections = {}, tmpCollections = {};
     while(collection = Zotero.nextCollection()) {	// First grab all the collections	
 		collections[collection.primary.key] = {};
+		collections[collection.primary.key].parentKey = collection.fields.parentKey;
 		collections[collection.primary.key].title = collection.fields.name;
 		collections[collection.primary.key].articles = {};
+		collections[collection.primary.key].collections = {};
+        //tmpCollections[collection.primary.key] = collection;
+        collectionKeys.push(collection.primary.key);
 	}
     return collections;
 }
@@ -88,11 +95,6 @@ Element.prototype.addChild = function (name, attributes, children) {
     this.appendChild(c);
 }
 
-
-
-// foreach($array as $idx=>$child) {
-//}
-
 function doExport() {
     
     articles = getArticles();    
@@ -111,12 +113,15 @@ function doExport() {
         }
     }
     
-    /*for (var idx in articles) {
-        var artCollections = articles[idx].collections;
-        for (var j=0;j<artCollections.length;j++) {
-            collections[artCollections[j]].articles[idx].push(thisArticle);
+    // Nest child collections
+    for (var key in collections) {
+        if (!collections.hasOwnProperty(key)) continue; // skip loop if the property is from prototype
+        var collection = collections[key];
+        if (collectionKeys.indexOf(collection.parentKey) > -1) {    // if a collection's parent isn't the root
+            collections[collection.parentKey].collections[key] = collection;
+            delete collections[key];
         }
-    }*/
+    }
     
     Zotero.write(JSON.stringify(collections));
     //Zotero.write(JSON.stringify(articles));
