@@ -64,7 +64,7 @@ function doExport() {
     articles = getArticles();    
     collections = getCollections();
     
-	/*
+    /*
     Add articles to their respective collection(s)
     */
     for (var key in articles) {
@@ -96,5 +96,5 @@ function doExport() {
     }
     
     /* Output */
-    Zotero.write(JSON.stringify(collections));
+    Zotero.write(JSON.stringify(collections, null, 4));
 }											
