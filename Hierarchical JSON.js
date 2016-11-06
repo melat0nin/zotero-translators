@@ -96,5 +96,5 @@ function doExport() {
     }
     
     /* Output */
-    Zotero.write(JSON.stringify(collections, null, 4));
+	Zotero.write(JSON.stringify(collections, null, 4));
 }											
